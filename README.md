@@ -14,16 +14,5 @@
 3.resource manager http添加basic auth认证
 
 	在yarn-site.xml中设置  http.basic.auth.enabled=true 则开启认证
-    http.basic.auth=a:b  则指定账号为a密码为b
+   	 http.basic.auth=a:b  则指定账号为a密码为b
     
-
-
-
-For the latest information about Hadoop, please visit our website at:
-
-   http://hadoop.apache.org/core/
-
-and our wiki, at:
-
-   http://wiki.apache.org/hadoop/
-
