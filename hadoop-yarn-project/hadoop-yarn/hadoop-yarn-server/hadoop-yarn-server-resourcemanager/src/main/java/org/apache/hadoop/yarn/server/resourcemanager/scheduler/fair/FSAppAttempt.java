@@ -1080,13 +1080,12 @@ public class FSAppAttempt extends SchedulerApplicationAttempt implements Schedul
 				LOG.debug("AM resource request: " + amResourceRequest + " exceeds maximum AM resource allowed, "
 						+ getQueue().dumpState());
 			}
-			
+
 			return Resources.none();
 		}
-		
+
 		return assignContainer(node, false);
 	}
-
 
 	/**
 	 * 从 assignContainer 方法拷贝来, 由于assignContainer方法会被preempted调用,无法分清是否是实际分配 顾分开处理
@@ -1113,16 +1112,15 @@ public class FSAppAttempt extends SchedulerApplicationAttempt implements Schedul
 		try {
 			AllocateBalancer balancer = AllocateBalancer.getInstance(rmContext);
 			int type = balancer.getBalancerType(getApplicationId(), node);
+			LOG.info("meiyou info: 平衡策略类型为 " + type );
 			if (type != BalancerType.NONE) {
-				if (!balancer.isInTurn(getApplicationId(), node, type)) {
+				LOG.error("type:" + type);
+				if (!balancer.isInTurn(getApplicationId(), node, type)) {// 核心判断,判断是否有足够的权重分配
 					LOG.info("meiyou info: " + node.getNodeName() + " is not in turn to assgin container");
 					return Resources.none();
 				}
 				Resource resource = assignContainer(node, false);
-				if(resource != Resources.none()) {
-					// 分配成功 更新balancer
-//					balancer.update(getApplicationId(), node);// 更新, 保证最后一个容器分配完监控信息是准确的
-				} else {
+				if (resource == Resources.none()) {
 					LOG.info(node.getNodeName() + " 有权重分配,但某种原因分配失败");
 				}
 				balancer.update(getApplicationId(), node);
@@ -1133,7 +1131,6 @@ public class FSAppAttempt extends SchedulerApplicationAttempt implements Schedul
 			e.printStackTrace();
 		}
 		// yxd balancer end
-
 		return assignContainer(node, false);
 	}
 

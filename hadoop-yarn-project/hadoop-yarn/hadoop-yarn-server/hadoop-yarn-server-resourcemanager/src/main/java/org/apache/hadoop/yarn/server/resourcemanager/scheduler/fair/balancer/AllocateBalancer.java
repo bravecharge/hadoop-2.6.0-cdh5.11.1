@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.Timer;
@@ -19,6 +20,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
@@ -107,30 +109,53 @@ public class AllocateBalancer {
 	 */
 	public int getBalancerType(ApplicationId applicationId, FSSchedulerNode node) {
 		RMAppAttempt appAttempt = RMCONTEXT.getRMApps().get(applicationId).getCurrentAppAttempt();
-		List<String> commands = appAttempt.getSubmissionContext().getAMContainerSpec().getCommands();
-		for (String cmd : commands) {
-			cmd = cmd.replace("'", "");
-			// 旧式兼容
-			if (cmd.equals("enable_balancer_by_available")) {
-				LOG.info(applicationId.toString() + " start to use balancer to assgin containers");
-				return BalancerType.BY_AVAILABLE;
-			} else if (cmd.equals("enable_balancer_by_total")) {
-				return BalancerType.BY_TOTAL;
-			}
-
-			// 新
-			if (cmd.contains("allocate.balancer.type")) {
-				String[] pair = cmd.split("=");
-				if (pair.length > 1) {
-					String type = pair[1];
-					if ("total".equals(type)) {
-						return BalancerType.BY_TOTAL;
-					} else if ("available".equals(type)) {
-						return BalancerType.BY_AVAILABLE;
+		String appType = appAttempt.getSubmissionContext().getApplicationType();
+		if (StringUtils.isNotEmpty(appType)) {
+			appType = appType.toLowerCase();
+		}
+		if (appType.contains("flink")) {// flink的main入口参数无法获取 单独处理
+			// 兼容flink -yD参数传递
+			Map<String, String> envMap = appAttempt.getSubmissionContext().getAMContainerSpec().getEnvironment();
+			String dpStr = envMap.get("_DYNAMIC_PROPERTIES");
+			String[] dpArray = dpStr.split("@@");
+			for (String dp : dpArray) {
+				if (dp.contains("allocate.balancer.type")) {
+					String[] pair = dp.split("=");
+					if (pair.length > 1) {
+						String type = pair[1];
+						if ("total".equals(type)) {
+							return BalancerType.BY_TOTAL;
+						} else if ("available".equals(type)) {
+							return BalancerType.BY_AVAILABLE;
+						}
 					}
 				}
 			}
+		} else {
+			List<String> commands = appAttempt.getSubmissionContext().getAMContainerSpec().getCommands();
+			for (String cmd : commands) {
+				cmd = cmd.replace("'", "");
+				// 旧式兼容
+				if (cmd.equals("enable_balancer_by_available")) {
+					LOG.info(applicationId.toString() + " start to use balancer to assgin containers");
+					return BalancerType.BY_AVAILABLE;
+				} else if (cmd.equals("enable_balancer_by_total")) {
+					return BalancerType.BY_TOTAL;
+				}
 
+				// 兼容spark main入口参数传递
+				if (cmd.contains("allocate.balancer.type")) {
+					String[] pair = cmd.split("=");
+					if (pair.length > 1) {
+						String type = pair[1];
+						if ("total".equals(type)) {
+							return BalancerType.BY_TOTAL;
+						} else if ("available".equals(type)) {
+							return BalancerType.BY_AVAILABLE;
+						}
+					}
+				}
+			}
 		}
 		return BalancerType.NONE;
 	}
@@ -309,4 +334,5 @@ public class AllocateBalancer {
 			}
 		}
 	}
+
 }

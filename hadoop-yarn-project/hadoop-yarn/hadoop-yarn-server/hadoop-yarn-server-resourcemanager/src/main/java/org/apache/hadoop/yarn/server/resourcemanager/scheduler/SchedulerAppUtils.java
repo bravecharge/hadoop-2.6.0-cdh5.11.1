@@ -24,7 +24,7 @@ public class SchedulerAppUtils {
 
   public static  boolean isBlacklisted(SchedulerApplicationAttempt application,
       SchedulerNode node, Log LOG) {
-    // by gxt.
+    // by yxd
     boolean isInNodeBlackList = application.isInNodeBlackList(application.getApplicationId(), node.getNodeName());
     if (isInNodeBlackList) {
       return true;

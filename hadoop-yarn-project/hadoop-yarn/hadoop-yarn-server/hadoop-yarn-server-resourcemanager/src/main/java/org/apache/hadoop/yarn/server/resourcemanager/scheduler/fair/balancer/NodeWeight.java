@@ -160,38 +160,27 @@ public class NodeWeight {
 	 */
 	private String getIdFromHaContainerId(String containerId) {
 		String[] items = containerId.split("_");
-		String id = items[2] + "_" + items[3];
+		String id = items[items.length-4] + "_" + items[items.length-3];
 		return id;
 	}
 	
-	/**
-	 * 从containerid找到appid, 注意单点模式下 containerid为: container_e14_1567490818119_0001_01_000001, 而高可用模式下为: container_1567490818119_0001_01_000001
-	 * @param containerId
-	 * @return
-	 */
-	private String getIdFromContainerId(String containerId) {
-		String[] items = containerId.split("_");
-		String id = items[1] + "_" + items[2];
-		return id;
-	}
-
-
 	public JsonObject toJson() {
 		JsonObject json = new JsonObject();
-		json.addProperty("node", node.getNodeName());
-		json.addProperty("containers", containers);
-		json.addProperty("round", round);
-		json.addProperty("weight", getWeight());
-		json.addProperty("useCores", useCores);
-		json.addProperty("coresType", coresType);
-		json.addProperty("nextAvailableCores", nextAvailableCores);
+		json.addProperty("node(节点)", node.getNodeName());
+		json.addProperty("containers(容器数)", containers);
+		json.addProperty("useCores(已使用核数)", useCores);
+		json.addProperty("coresType(平衡策略)", coresType);
+		json.addProperty("round(轮次)", round);
+		json.addProperty("weight(当前权重)", getWeight());
+		json.addProperty("nextAvailableCores(下一次分配权重)", nextAvailableCores);
 		return json;
 	}
 	
 	public static void main(String[] args) {
 		String cid = "container_e14_1567490818119_0001_01_000001";
-		String[] items = cid.split("_");
-		String id = items[2] + "_" + items[3];
+		String cid2 = "container_1567490818119_0001_01_000001";
+		String[] items = cid2.split("_");
+		String id = items[items.length-4] + "_" + items[items.length-3];
 		System.out.println(id);
 	}
 

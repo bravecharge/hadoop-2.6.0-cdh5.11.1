@@ -375,7 +375,7 @@ public class FSLeafQueue extends FSQueue {
 				continue;
 			}
 //			assigned = sched.assignContainer(node); // yxd 原生
-			assigned = sched.assignContainerWithBalancer(node); // yxd
+			assigned = sched.assignContainerWithBalancer(node); // 修改后 yxd
 			if (!assigned.equals(none())) {
 				if (LOG.isDebugEnabled()) {
 					LOG.debug("Assigned container in queue:" + getName() + " " + "container:" + assigned);

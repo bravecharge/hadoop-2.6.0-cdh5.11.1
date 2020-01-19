@@ -451,9 +451,8 @@ public class SchedulerApplicationAttempt {
 		return new ContainersAndNMTokensAllocation(returnContainerList, nmTokens);
 	}
 
-
 	/**
-	 * by gxt
+	 * by gxt,yxd
 	 * 
 	 * @param applicationId
 	 * @param node
@@ -462,34 +461,50 @@ public class SchedulerApplicationAttempt {
 	public boolean isInNodeBlackList(ApplicationId applicationId, String node) {
 		RMAppAttempt appAttempt = rmContext.getRMApps().get(applicationId).getCurrentAppAttempt();
 		// 从--yarn-params 里提取参数配置, 缺点:但需要客户端定制化
-		if (appAttempt != null && appAttempt.getSubmissionContext() != null) {
-			if (appAttempt.getSubmissionContext().getNodeBlackList() != null) {
-				boolean result = Arrays.asList(appAttempt.getSubmissionContext().getNodeBlackList().split(","))
-						.contains(node);
-				if (result) {
-					LOG.info("meiyou info: " + node + " is in blackList for " + applicationId);
-				}
-				return result;
-			}
-		}
-		
-		// yxd 从main args里提取配置,无需客户端定制化,涵盖所有计算框架,  缺点:非标准化参数,容易混淆
+//		if (appAttempt != null && appAttempt.getSubmissionContext() != null) {
+//			if (appAttempt.getSubmissionContext().getNodeBlackList() != null) {
+//				boolean result = Arrays.asList(appAttempt.getSubmissionContext().getNodeBlackList().split(","))
+//						.contains(node);
+//				if (result) {
+//					LOG.info("meiyou info: " + node + " is in blackList for " + applicationId);
+//				}
+//				return result;
+//			}
+//		}
+
+		// yxd 兼容spark 从main args里提取配置,无需客户端定制化,涵盖所有计算框架, 缺点:非标准化参数,容易混淆
 		List<String> commands = appAttempt.getSubmissionContext().getAMContainerSpec().getCommands();
 		for (String cmd : commands) {
 			cmd = cmd.replace("'", "");
 			if (cmd.contains("node.black.list")) {
 				String[] pair = cmd.split("=");
-				if(pair.length > 1) {
+				if (pair.length > 1) {
 					boolean result = Arrays.asList(pair[1].split(",")).contains(node);
 					if (result) {
-						LOG.info(node + " is in blackList for " + applicationId);
+						LOG.info(node + " is in blackList for " + applicationId + " with spark env");
 					}
 					return result;
 				}
 			}
 		}
-		// yxd end
-		
+		// yxd 兼容 flink, flink main args无法从command里获取, 可以通过-yD参数传递
+		Map<String, String> envMap = appAttempt.getSubmissionContext().getAMContainerSpec().getEnvironment();
+		String dpStr = envMap.get("_DYNAMIC_PROPERTIES");
+		if (StringUtils.isNotEmpty(dpStr)) {
+			String[] dpArray = dpStr.split("@@");
+			for (String dp : dpArray) {
+				if (dp.contains("node.black.list")) {
+					String[] pair = dp.split("=");
+					if (pair.length > 1) {
+						boolean result = Arrays.asList(pair[1].split(",")).contains(node);
+						if (result) {
+							LOG.info(node + " is in blackList for " + applicationId + " with flink env");
+						}
+						return result;
+					}
+				}
+			}
+		}
 		return false;
 	}
 
