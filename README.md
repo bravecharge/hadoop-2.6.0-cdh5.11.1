@@ -1,5 +1,5 @@
 改动:
-一. hadoop-yarn-server-resourcemanage
+一. hadoop-yarn-server-resourcemanage     
 1.节点屏蔽功能
 
 	 --node.black.list=n1,n2,n3     在main args上加上该参数, 则屏蔽n1,n2,n3节点,容器将不再分配在这些节点上
