@@ -8,7 +8,7 @@
 
 	--allocate.balancer.type=total 或 --allocate.balancer.type=available	在main args上加上该参数,
 	    "total"容器基于总资源平衡分配,   
-	    "available" 容器基于当前可用的资源平衡分配  详细见:http://wiki.meiyou.com/pages/viewpage.action?pageId=39912106
+	    "available" 容器基于当前可用的资源平衡分配  
 	  
 
 3.resource manager http添加basic auth认证
